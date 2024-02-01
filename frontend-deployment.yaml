@@ -1,0 +1,56 @@
+#before applying, run the following command to create the secret
+# API_HOST=$(kubectl get svc api -n david -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+# kubectl create secret generic api-host-secret --from-literal=api_host=$API_HOST --namespace=david
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: david
+  labels:
+    app: frontend
+    env: demo
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: davidsvida/frontend-deploy:v1
+        imagePullPolicy: Always
+        env:
+          - name: API_HOST_PORT
+            valueFrom:
+              secretKeyRef:
+                name: api-host-secret
+                key: api_host
+        ports:
+        - containerPort: 8080 
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3

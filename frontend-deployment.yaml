@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: davidsvida/frontend-deploy:v1
+        image: davidsvida/frontend-deploy:v5
         imagePullPolicy: Always
         env:
           - name: API_HOST_PORT
